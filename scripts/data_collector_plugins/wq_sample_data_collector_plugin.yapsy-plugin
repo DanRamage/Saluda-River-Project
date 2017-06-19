@@ -1,0 +1,15 @@
+[Core]
+Name = SC Rivers Sample Data Collector
+Module = wq_sample_data_collector_plugin
+
+[Documentation]
+Author = Dan Ramage
+Version = 0.1
+Website = http://howsmyscriver.org
+Description = Checks for a recently emailed bacteria sample report.
+
+[Settings]
+ini_file=/Users/danramage/Documents/workspace/WaterQuality/Saluda-River-Project/config/sc_rivers_engine_debug.ini
+
+[MonitorEmail]
+ini_file=/Users/danramage/Documents/workspace/WaterQuality/Saluda-River-Project/config/passworded_options.ini
