@@ -3,6 +3,7 @@ sys.path.append('../../commonfiles/python')
 
 import logging.config
 import twitter
+import ConfigParser
 
 from output_plugin import output_plugin
 
@@ -16,10 +17,16 @@ class twitter_output_plugin(output_plugin):
   def initialize_plugin(self, **kwargs):
     try:
       details = kwargs['details']
-      self.consumer_key = details.get("Authentication", "consumer_key")
-      self.consumer_secret = details.get("Authentication", "consumer_secret")
-      self.access_token = details.get("Authentication", "access_token")
-      self.access_token_secret = details.get("Authentication", "access_token_secret")
+
+      ini_file = details.get("Authentication", "ini_file")
+
+      config_file = ConfigParser.RawConfigParser()
+      config_file.read(ini_file)
+
+      self.consumer_key = config_file.get("twitter_output_plugin", "consumer_key")
+      self.consumer_secret = config_file.get("twitter_output_plugin", "consumer_secret")
+      self.access_token = config_file.get("twitter_output_plugin", "access_token")
+      self.access_token_secret = config_file.get("twitter_output_plugin", "access_token_secret")
       return True
     except Exception as e:
       self.logger.exception(e)

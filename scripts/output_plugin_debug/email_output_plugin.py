@@ -3,9 +3,11 @@ sys.path.append('../../commonfiles/python')
 
 from mako.template import Template
 from mako import exceptions as makoExceptions
-from smtp_utils import smtpClass
 import os
 import logging.config
+import ConfigParser
+
+from smtp_utils import smtpClass
 from output_plugin import output_plugin
 
 class email_output_plugin(output_plugin):
@@ -17,15 +19,20 @@ class email_output_plugin(output_plugin):
   def initialize_plugin(self, **kwargs):
     try:
       details = kwargs['details']
-      self.mailhost = details.get("ResultsEmail", "mailhost")
-      self.mailport = None
-      self.fromaddr = details.get("ResultsEmail", "fromaddr")
-      self.toaddrs = details.get("ResultsEmail", "toaddrs").split(',')
-      self.subject = details.get("ResultsEmail", "subject")
-      self.user = details.get("ResultsEmail", "user")
-      self.password = details.get("ResultsEmail", "password")
-      self.result_out_directory = details.get("ResultsEmail", "results_directory")
-      self.results_template = details.get("ResultsEmail", "results_template")
+      ini_file = details.get("ResultsEmail", "ini_file")
+
+      config_file = ConfigParser.RawConfigParser()
+      config_file.read(ini_file)
+
+      self.mailhost = config_file.get("email_output_plugin", "mailhost")
+      self.mailport = config_file.get("email_output_plugin", "port")
+      self.fromaddr = config_file.get("email_output_plugin", "fromaddr")
+      self.toaddrs = config_file.get("email_output_plugin", "toaddrs").split(',')
+      self.subject = config_file.get("email_output_plugin", "subject")
+      self.user = config_file.get("email_output_plugin", "user")
+      self.password = config_file.get("email_output_plugin", "password")
+      self.result_out_directory = config_file.get("email_output_plugin", "results_directory")
+      self.results_template = config_file.get("email_output_plugin", "results_template")
       #self.report_url = details.get("Settings", "report_url")
 
       return True
@@ -55,7 +62,10 @@ class email_output_plugin(output_plugin):
       try:
         subject = self.subject % (sample_date)
         #Now send the email.
-        smtp = smtpClass(host=self.mailhost, user=self.user, password=self.password)
+        smtp = smtpClass(host=self.mailhost,
+                         user=self.user, password=self.password,
+                         port=self.mailport,
+                         use_tls=True)
         smtp.rcpt_to(self.toaddrs)
         smtp.from_addr(self.fromaddr)
         smtp.subject(subject)

@@ -6,8 +6,9 @@ import logging.config
 from data_collector_plugin import data_collector_plugin
 import ConfigParser
 import traceback
-from yapsy.IPlugin import IPlugin
-from multiprocessing import Process
+import time
+#from yapsy.IPlugin import IPlugin
+#from multiprocessing import Process
 
 from get_wq_sample_data import check_email_for_update,parse_sheet_data
 from wq_sites import wq_sample_sites
@@ -24,15 +25,20 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
   def initialize_plugin(self, **kwargs):
     try:
       plugin_details = kwargs['details']
+
       self.ini_file = plugin_details.get('Settings', 'ini_file')
       self.output_queue = kwargs['queue']
 
-      self.monitor_mailhost = plugin_details.get("MonitorEmail", "mailhost")
-      self.monitor_fromaddr = plugin_details.get("MonitorEmail", "fromaddr")
-      self.monitor_toaddrs = plugin_details.get("MonitorEmail", "toaddrs").split(',')
-      self.monitor_subject = plugin_details.get("MonitorEmail", "subject")
-      self.monitor_user = plugin_details.get("MonitorEmail", "user")
-      self.monitor_password = plugin_details.get("MonitorEmail", "password")
+      email_ini_file = plugin_details.get("MonitorEmail", "ini_file")
+      config_file = ConfigParser.RawConfigParser()
+      config_file.read(email_ini_file)
+      self.monitor_mailhost = config_file.get("sample_data_collector_plugin", "mailhost")
+      self.port = config_file.get("sample_data_collector_plugin", "port")
+      self.monitor_fromaddr = config_file.get("sample_data_collector_plugin", "fromaddr")
+      self.monitor_toaddrs = config_file.get("sample_data_collector_plugin", "toaddrs").split(',')
+      self.monitor_subject = config_file.get("sample_data_collector_plugin", "subject")
+      self.monitor_user = config_file.get("sample_data_collector_plugin", "user")
+      self.monitor_password = config_file.get("sample_data_collector_plugin", "password")
 
       return True
     except Exception as e:
@@ -41,6 +47,7 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
 
   def run(self):
     try:
+      start_time = time.time()
       config_file = ConfigParser.RawConfigParser()
       config_file.read(self.ini_file)
 
@@ -97,6 +104,7 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
           self.output_queue.put((data_result_types.SAMPLING_DATA_TYPE, wq_data_collection))
 
           try:
+            self.logger.debug("Emailing sample data collector file list.")
             if len(renamed_files):
               mail_body = "Files: %s downloaded and processed" % (renamed_files)
             else:
@@ -105,12 +113,16 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
             # Now send the email.
             smtp = smtpClass(host=self.monitor_mailhost,
                              user=self.monitor_user,
-                             password=self.monitor_password)
+                             password=self.monitor_password,
+                             port=self.port,
+                             use_tls=True)
+
             smtp.rcpt_to(self.monitor_toaddrs)
             smtp.from_addr(self.monitor_fromaddr)
             smtp.subject(subject)
             smtp.message(mail_body)
             smtp.send(content_type="text")
+            self.logger.debug("Finished emailing sample data collector file list.")
           except Exception as e:
             if self.logger:
               self.logger.exception(e)
@@ -120,5 +132,5 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
         except Exception, e:
           if(logger):
             logger.exception(e)
-
+      self.logger.debug("run finished in %f seconds." % (time.time() - start_time))
     return

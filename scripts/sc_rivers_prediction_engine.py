@@ -114,7 +114,7 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
     return test_list
 
   def run_wq_models(self, **kwargs):
-    prediction_testrun_date = datetime.now()
+    today_date = datetime.now()
     try:
       config_file = ConfigParser.RawConfigParser()
       config_file.read(kwargs['config_file_name'])
@@ -147,16 +147,17 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
         sample_date = None
         failed_sites = []
         for test in test_list:
-          if test.predictionLevel.value == predictionLevels.HIGH:
-            for site in wq_sites:
-              if site.name == test.name:
-                failed_sites.append({
-                  'test_result':  test,
-                  'wq_site': site
-                })
-                if sample_date is None:
-                  sample_date = test.test_time
-                break
+          if test.test_time.date() == today_date.date():
+            if test.predictionLevel.value == predictionLevels.HIGH:
+              for site in wq_sites:
+                if site.name == test.name:
+                  failed_sites.append({
+                    'test_result':  test,
+                    'wq_site': site
+                  })
+                  if sample_date is None:
+                    sample_date = test.test_time
+                  break
         if len(failed_sites):
           self.output_results(output_plugin_directories=output_plugin_dirs,
                               failed_sites = failed_sites,
@@ -164,6 +165,7 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
                               sample_date=sample_date)
       except Exception as e:
         self.logger.exception(e)
+
   def collect_data(self, **kwargs):
     self.logger.info("Begin collect_data")
     try:

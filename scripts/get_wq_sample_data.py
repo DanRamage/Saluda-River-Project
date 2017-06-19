@@ -33,17 +33,22 @@ def check_email_for_update(config_filename):
     destination_directory = email_ini_config_file.get("wq_results_email_settings", "destination_directory")
   except (ConfigParser.Error,Exception) as e:
     logger.exception(e)
-  try:
-    logger.info("Attempting to connect to email server.")
 
-    pop3_obj = poplib.POP3_SSL(email_host, 995)
-    pop3_obj.user(email_user)
-    pop3_obj.pass_(email_password)
+  connected = False
+  for attempt_cnt in range(0, 5):
+    try:
+      logger.info("Attempt: %d to connect to email server." % (attempt_cnt))
 
-    logger.info("Successfully connected to email server.")
-  except (poplib.error_proto, Exception) as e:
-    logger.exception(e)
-  else:
+      pop3_obj = poplib.POP3_SSL(email_host, 995)
+      pop3_obj.user(email_user)
+      pop3_obj.pass_(email_password)
+      connected = True
+      logger.info("Successfully connected to email server.")
+      break
+    except (poplib.error_proto, Exception) as e:
+      logger.exception(e)
+      time.sleep(5)
+  if connected:
     emails, total_bytes = pop3_obj.stat()
     for i in range(emails):
         # return in format: (response, ['line', ...], octets)
@@ -113,7 +118,7 @@ def parse_sheet_data(xl_file_name, wq_data_collection):
           logger.debug("Site: %s Date: %s Value: %s" % (wq_sample_rec.station,
                                                         wq_sample_rec.date_time,
                                                         wq_sample_rec.value))
-          if sample_date is None:
+          if sample_date is None or date_val > sample_date:
             sample_date = date_val
           wq_data_collection.append(wq_sample_rec)
         except Exception as e:
