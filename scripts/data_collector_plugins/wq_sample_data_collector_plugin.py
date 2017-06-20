@@ -94,12 +94,13 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
               logger.exception(e)
 
           # Create the geojson files
-          current_advisories = wq_advisories_file(wq_sites)
-          current_advisories.create_file(results_file, wq_data_collection)
+          if len(wq_data_collection):
+            current_advisories = wq_advisories_file(wq_sites)
+            current_advisories.create_file(results_file, wq_data_collection)
 
-          for site in wq_sites:
-            site_advisories = wq_station_advisories_file(site)
-            site_advisories.create_file(station_results_directory, wq_data_collection)
+            for site in wq_sites:
+              site_advisories = wq_station_advisories_file(site)
+              site_advisories.create_file(station_results_directory, wq_data_collection)
 
           self.output_queue.put((data_result_types.SAMPLING_DATA_TYPE, wq_data_collection))
 
