@@ -9,7 +9,7 @@ Website = http://howsmyscriver.org
 Description = Checks for a recently emailed bacteria sample report.
 
 [Settings]
-ini_file=/Users/danramage/Documents/workspace/WaterQuality/Saluda-River-Project/config/sc_rivers_engine_debug.ini
+ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/sc_rivers_engine.ini
 
 [MonitorEmail]
-ini_file=/Users/danramage/Documents/workspace/WaterQuality/Saluda-River-Project/config/passworded_options.ini
+ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/passworded_options.ini

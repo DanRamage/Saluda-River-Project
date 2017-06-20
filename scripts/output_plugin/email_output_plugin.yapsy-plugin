@@ -9,6 +9,6 @@ Website = http://howsthebeach.org
 Description = Saluda River Coalition Press Release Email
 
 [ResultsEmail]
-ini_file=/Users/danramage/Documents/workspace/WaterQuality/Saluda-River-Project/config/passworded_options.ini
+ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/passworded_options.ini
 
 

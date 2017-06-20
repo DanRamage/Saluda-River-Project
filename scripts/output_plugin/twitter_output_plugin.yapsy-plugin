@@ -9,4 +9,4 @@ Website = http://howsmyscriver.org
 Description = Saluda River Coalition Twitter Account
 
 [Authentication]
-ini_file=/Users/danramage/Documents/workspace/WaterQuality/Saluda-River-Project/config/passworded_options.ini
+ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/passworded_options.ini
