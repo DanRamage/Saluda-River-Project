@@ -43,7 +43,7 @@ class twitter_output_plugin(output_plugin):
       failed_sites = kwargs['failed_sites']
       sample_date = kwargs['sampling_date'].strftime("%Y-%m-%d")
 
-      """
+
       if len(failed_sites):
         for site in failed_sites:
           wq_site = site['wq_site']
@@ -51,7 +51,7 @@ class twitter_output_plugin(output_plugin):
           twit_api.PostUpdate("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
       else:
         twit_api.PostUpdate("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
-      """
+
     except Exception as e:
       self.logger.exception(e)
 
