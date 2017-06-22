@@ -43,37 +43,39 @@ class email_output_plugin(output_plugin):
   def emit(self, **kwargs):
     if self.logger:
       self.logger.debug("Starting emit for email output.")
-    try:
-      mytemplate = Template(filename=self.results_template)
-      sample_date = kwargs['sampling_date'].strftime("%Y-%m-%d")
-      results_outfile = os.path.join(self.result_out_directory, "%s.html" % (sample_date))
-      with open(results_outfile, "w") as result_file_obj:
-        results_report = mytemplate.render(sampling_date=sample_date,
-                                           failed_sites=kwargs['failed_sites'],
-                                           feedback_email=kwargs['feedback_email'])
-        result_file_obj.write(results_report)
-    except TypeError,e:
-      if self.logger:
-        self.logger.exception(makoExceptions.text_error_template().render())
-    except (IOError,AttributeError,Exception) as e:
-      if self.logger:
-        self.logger.exception(e)
-    else:
+
+    if len(kwargs['failed_sites']):
       try:
-        subject = self.subject % (sample_date)
-        #Now send the email.
-        smtp = smtpClass(host=self.mailhost,
-                         user=self.user, password=self.password,
-                         port=self.mailport,
-                         use_tls=True)
-        smtp.rcpt_to(self.toaddrs)
-        smtp.from_addr(self.fromaddr)
-        smtp.subject(subject)
-        smtp.message(results_report)
-        smtp.send(content_type="html")
-      except Exception as e:
+        mytemplate = Template(filename=self.results_template)
+        sample_date = kwargs['sampling_date'].strftime("%Y-%m-%d")
+        results_outfile = os.path.join(self.result_out_directory, "%s.html" % (sample_date))
+        with open(results_outfile, "w") as result_file_obj:
+          results_report = mytemplate.render(sampling_date=sample_date,
+                                             failed_sites=kwargs['failed_sites'],
+                                             feedback_email=kwargs['feedback_email'])
+          result_file_obj.write(results_report)
+      except TypeError,e:
+        if self.logger:
+          self.logger.exception(makoExceptions.text_error_template().render())
+      except (IOError,AttributeError,Exception) as e:
         if self.logger:
           self.logger.exception(e)
+      else:
+        try:
+          subject = self.subject % (sample_date)
+          #Now send the email.
+          smtp = smtpClass(host=self.mailhost,
+                           user=self.user, password=self.password,
+                           port=self.mailport,
+                           use_tls=True)
+          smtp.rcpt_to(self.toaddrs)
+          smtp.from_addr(self.fromaddr)
+          smtp.subject(subject)
+          smtp.message(results_report)
+          smtp.send(content_type="html")
+        except Exception as e:
+          if self.logger:
+            self.logger.exception(e)
     if self.logger:
       self.logger.debug("Finished emit for email output.")
 

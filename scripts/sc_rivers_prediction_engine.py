@@ -130,8 +130,6 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
 
       test_list = self.build_test_objects(config_file, wq_sites)
 
-
-
       output_plugin_dirs=config_file.get('output_plugins', 'plugin_directories').split(',')
 
       email_settings_ini = config_file.get('email_settings', 'settings_ini')
@@ -144,25 +142,27 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
       self.logger.exception(e)
     else:
       try:
-        sample_date = None
-        failed_sites = []
-        for test in test_list:
-          if test.test_time.date() == today_date.date():
-            if test.predictionLevel.value == predictionLevels.HIGH:
-              for site in wq_sites:
-                if site.name == test.name:
-                  failed_sites.append({
-                    'test_result':  test,
-                    'wq_site': site
-                  })
-                  if sample_date is None:
-                    sample_date = test.test_time
-                  break
-        if len(failed_sites):
+        if len(test_list):
+          sample_date = None
+          failed_sites = []
+          for test in test_list:
+            if test.test_time.date() == today_date.date():
+              if test.predictionLevel.value == predictionLevels.HIGH:
+                for site in wq_sites:
+                  if site.name == test.name:
+                    failed_sites.append({
+                      'test_result':  test,
+                      'wq_site': site
+                    })
+                    if sample_date is None:
+                      sample_date = test.test_time
+                    break
           self.output_results(output_plugin_directories=output_plugin_dirs,
                               failed_sites = failed_sites,
                               feedback_email=feedback_email,
                               sample_date=sample_date)
+        else:
+          self.logger.debug("No sites/data found to create test objects.")
       except Exception as e:
         self.logger.exception(e)
 
