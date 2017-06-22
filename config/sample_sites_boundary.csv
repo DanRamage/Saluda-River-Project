@@ -1,7 +1,7 @@
 WKT,EPAbeachID,SPLocation,Description,County,Boundary
 "POINT(-81.190706 34.046512)",,SSUL,Saluda Shoals Park Upper Landing,Richland,Outlet Saluda River
 "POINT(-81.163498 34.043129)",,SSLL,Saluda Shoals Park Lower Landing,Richland,Outlet Saluda River
-"POINT(-81.128280 34.025131)",,I20,"CWS/I-20 discharge",Richland,Outlet Saluda River
+"POINT(-81.128280 34.025131)",,I-20,"CWS/I-20 discharge",Richland,Outlet Saluda River
 "POINT(-81.087809 34.013855)",,S-298,"Saluda USGS Gauge Station Above Zoo",Richland,Outlet Saluda River
 "POINT(-81.076463 34.008431)",,RBZ,"River Banks Zoo Bridge",Richland,Outlet Saluda River
 "POINT(-81.045451 33.988227)",,CSB-001R,"Congaree River at Blossom Street, Right Bank",Richland,Upper Congaree River
