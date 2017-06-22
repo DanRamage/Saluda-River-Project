@@ -4,7 +4,7 @@ sys.path.append('./data_collector_plugins_debug')
 import os
 
 import logging.config
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 import traceback
 import time
@@ -145,8 +145,11 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
         if len(test_list):
           sample_date = None
           failed_sites = []
+          sampling_date = today_date - timedelta(hours=24)
           for test in test_list:
-            if test.test_time.date() == today_date.date():
+            if sample_date is None:
+              sample_date = test.test_time
+            if test.test_time.date() == sampling_date.date():
               if test.predictionLevel.value == predictionLevels.HIGH:
                 for site in wq_sites:
                   if site.name == test.name:
@@ -154,8 +157,6 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
                       'test_result':  test,
                       'wq_site': site
                     })
-                    if sample_date is None:
-                      sample_date = test.test_time
                     break
           self.output_results(output_plugin_directories=output_plugin_dirs,
                               failed_sites = failed_sites,

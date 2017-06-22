@@ -111,8 +111,15 @@ def parse_sheet_data(xl_file_name, wq_data_collection):
           wq_sample_rec = wq_sample_data()
 
           wq_sample_rec.station = data_row[station_ndx].value
-          date_val = xlrd.xldate.xldate_as_datetime(data_row[date_ndx].value, wb.datemode)
-          time_val = xlrd.xldate.xldate_as_datetime(data_row[time_ndx].value, wb.datemode)
+          try:
+            date_val = xlrd.xldate.xldate_as_datetime(data_row[date_ndx].value, wb.datemode)
+          except Exception as e:
+            date_val = datetime.strptime(data_row[date_ndx].value, "%Y-%m-%d")
+
+          try:
+            time_val = datetime.strptime(data_row[date_ndx].value, "%H%M")
+          except Exception as e:
+            time_val = datetime.strptime(data_row[date_ndx].value, "%Y-%m-%d")
           wq_sample_rec.date_time = (est_tz.localize(datetime.combine(date_val.date(), time_val.time()))).astimezone(utc_tz)
           wq_sample_rec.value = data_row[results_ndx].value
           logger.debug("Site: %s Date: %s Value: %s" % (wq_sample_rec.station,
