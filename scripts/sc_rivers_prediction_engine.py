@@ -124,18 +124,19 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
       wq_sites = wq_sample_sites()
       wq_sites.load_sites(file_name=sites_location_file, boundary_file=boundaries_location_file)
 
+      enable_data_collector_plugins = config_file.getboolean('data_collector_plugins', 'enable_plugins')
       data_collector_plugin_directories=config_file.get('data_collector_plugins', 'plugin_directories').split(',')
-
-      self.collect_data(data_collector_plugin_directories=data_collector_plugin_directories)
+      if enable_data_collector_plugins:
+        self.collect_data(data_collector_plugin_directories=data_collector_plugin_directories)
 
       test_list = self.build_test_objects(config_file, wq_sites)
 
+      enable_output_plugins = config_file.getboolean('output_plugins', 'enable_plugins')
       output_plugin_dirs=config_file.get('output_plugins', 'plugin_directories').split(',')
 
       email_settings_ini = config_file.get('email_settings', 'settings_ini')
       email_ini_cfg = ConfigParser.RawConfigParser()
       email_ini_cfg.read(email_settings_ini)
-      destination_directory = email_ini_cfg.get("wq_results_email_settings", "destination_directory")
       feedback_email = email_ini_cfg.get("feedback_email", "address")
 
     except (ConfigParser.Error, Exception) as e:
@@ -158,10 +159,11 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
                       'wq_site': site
                     })
                     break
-          self.output_results(output_plugin_directories=output_plugin_dirs,
-                              failed_sites = failed_sites,
-                              feedback_email=feedback_email,
-                              sample_date=sample_date)
+          if enable_output_plugins:
+            self.output_results(output_plugin_directories=output_plugin_dirs,
+                                failed_sites = failed_sites,
+                                feedback_email=feedback_email,
+                                sample_date=sample_date)
         else:
           self.logger.debug("No sites/data found to create test objects.")
       except Exception as e:
