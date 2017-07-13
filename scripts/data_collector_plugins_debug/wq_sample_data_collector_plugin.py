@@ -81,19 +81,22 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
           renamed_files = []
           wq_data_collection = wq_samples_collection()
           for wq_file in wq_data_files:
-            sample_date = parse_sheet_data(wq_file, wq_data_collection)
-            # Rename the file to have the sample date in filename.
-            file_path, file_name = os.path.split(wq_file)
-            file_name, file_ext = os.path.splitext(file_name)
-            new_filename = os.path.join(file_path, "%s-sample_results%s" % (sample_date.strftime("%Y-%m-%d"), file_ext))
-            logger.debug("Renaming file: %s to %s" % (wq_file, new_filename))
-            try:
-              os.rename(wq_file, new_filename)
-              renamed_files.append(new_filename)
-            except Exception as e:
-              logger.exception(e)
-
-          # Create the geojson files if we have results
+            file_name, exten = os.path.splitext(wq_file)
+            if exten == '.xls' or exten == '.xlsx':
+              sample_date = parse_sheet_data(wq_file, wq_data_collection)
+              # Rename the file to have the sample date in filename.
+              file_path, file_name = os.path.split(wq_file)
+              file_name, file_ext = os.path.splitext(file_name)
+              new_filename = os.path.join(file_path, "%s-sample_results%s" % (sample_date.strftime("%Y-%m-%d"), file_ext))
+              logger.debug("Renaming file: %s to %s" % (wq_file, new_filename))
+              try:
+                os.rename(wq_file, new_filename)
+                renamed_files.append(new_filename)
+              except Exception as e:
+                logger.exception(e)
+            else:
+              self.logger.error("File: %s is not the excel file we are looking for.")
+          # Create the geojson files
           if len(wq_data_collection):
             current_advisories = wq_advisories_file(wq_sites)
             current_advisories.create_file(results_file, wq_data_collection)
