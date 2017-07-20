@@ -30,6 +30,7 @@ def check_email_for_update(config_filename):
     email_host = email_ini_config_file.get("wq_results_email_settings", "host")
     email_user = email_ini_config_file.get("wq_results_email_settings", "user")
     email_password = email_ini_config_file.get("wq_results_email_settings", "password")
+    email_host_port = email_ini_config_file.get("wq_results_email_settings", "port")
     destination_directory = email_ini_config_file.get("wq_results_email_settings", "destination_directory")
   except (ConfigParser.Error,Exception) as e:
     logger.exception(e)
@@ -39,7 +40,7 @@ def check_email_for_update(config_filename):
     try:
       logger.info("Attempt: %d to connect to email server." % (attempt_cnt))
 
-      pop3_obj = poplib.POP3_SSL(email_host, 995)
+      pop3_obj = poplib.POP3_SSL(email_host, email_host_port)
       pop3_obj.user(email_user)
       pop3_obj.pass_(email_password)
       connected = True
@@ -69,7 +70,7 @@ def check_email_for_update(config_filename):
             continue
 
           filename = part.get_filename()
-          if filename.find('xlsx') != -1 or filename.find('xls'):
+          if filename.find('xlsx') != -1 or filename.find('xls') != -1:
             download_time = datetime.now()
             logger.debug("Attached filename: %s" % (filename))
             save_file = "%s_%s" % (download_time.strftime("%Y-%m-%d_%H_%M_%S"), filename)
@@ -79,8 +80,9 @@ def check_email_for_update(config_filename):
               out_file.write(part.get_payload(decode=1))
               out_file.close()
               file_list.append(saved_file_name)
+              pop3_obj.dele(i+1)
 
-    #pop3_obj.quit()
+    pop3_obj.quit()
 
   if logger:
     logger.debug("Finished check_email_for_update")
