@@ -53,7 +53,8 @@ def check_email_for_update(config_filename):
     emails, total_bytes = pop3_obj.stat()
     for i in range(emails):
         # return in format: (response, ['line', ...], octets)
-        response = pop3_obj.retr(i+1)
+        msg_num = i+1
+        response = pop3_obj.retr(msg_num)
         raw_message = response[1]
 
         str_message = email.message_from_string("\n".join(raw_message))
@@ -80,7 +81,7 @@ def check_email_for_update(config_filename):
               out_file.write(part.get_payload(decode=1))
               out_file.close()
               file_list.append(saved_file_name)
-              pop3_obj.dele(i+1)
+              pop3_obj.dele(msg_num)
 
     pop3_obj.quit()
 
