@@ -9,6 +9,6 @@ Website = http://howsmyscriver.org
 Description = Saluda River Coalition Press Release Email
 
 [output]
-filename=/home/xeniaprod/feeds/sc_rivers/voicemail.json
+filename=/mnt/wq_feeds/sc_rivers/voicemail.json
 
 
