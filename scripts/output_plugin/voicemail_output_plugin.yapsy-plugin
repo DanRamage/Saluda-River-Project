@@ -1,5 +1,5 @@
 [Core]
-Name = Saluda River Email Plugin
+Name = Saluda River Voice Message Plugin
 Module = voicemail_output_plugin
 
 [Documentation]
