@@ -128,7 +128,11 @@ def parse_sheet_data(xl_file_name, wq_data_collection):
           try:
             wq_sample_rec.value = float(data_row[results_ndx].value)
           except ValueError as e:
-            wq_sample_rec.value = float(data_row[results_ndx].value.replace('<', ''))
+            try:
+              wq_sample_rec.value = float(data_row[results_ndx].value.replace('<', ''))
+            except (ValueError, Exception) as e:
+              wq_sample_rec.value = -9999
+              logger.error("Row: %d Value: %s was unable to be converted to float." % (row_ndx, data_row[results_ndx].value))
 
           logger.debug("Site: %s Date: %s Value: %s" % (wq_sample_rec.station,
                                                         wq_sample_rec.date_time,
