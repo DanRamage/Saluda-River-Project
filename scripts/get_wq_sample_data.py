@@ -125,7 +125,11 @@ def parse_sheet_data(xl_file_name, wq_data_collection):
             val = data_row[date_ndx].value
             time_val = datetime.strptime(str(data_row[time_ndx].value), "%H%M")
           wq_sample_rec.date_time = (est_tz.localize(datetime.combine(date_val.date(), time_val.time()))).astimezone(utc_tz)
-          wq_sample_rec.value = data_row[results_ndx].value
+          try:
+            wq_sample_rec.value = float(data_row[results_ndx].value)
+          except ValueError as e:
+            wq_sample_rec.value = float(data_row[results_ndx].value.replace('<', ''))
+
           logger.debug("Site: %s Date: %s Value: %s" % (wq_sample_rec.station,
                                                         wq_sample_rec.date_time,
                                                         wq_sample_rec.value))
