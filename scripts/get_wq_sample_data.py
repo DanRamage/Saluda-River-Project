@@ -123,7 +123,14 @@ def parse_sheet_data(xl_file_name, wq_data_collection):
             time_val = datetime.strptime(data_row[time_ndx].value, "%H%M")
           except Exception as e:
             val = data_row[date_ndx].value
-            time_val = datetime.strptime(str(data_row[time_ndx].value), "%H%M")
+            try:
+              time_val = datetime.strptime(str(data_row[time_ndx].value), "%H%M")
+            except Exception as e:
+              try:
+                time_val = datetime.strptime(str(data_row[time_ndx].value), "%H:%M:%S")
+              except Exception as e:
+                logger.exception(e)
+
           wq_sample_rec.date_time = (est_tz.localize(datetime.combine(date_val.date(), time_val.time()))).astimezone(utc_tz)
           try:
             wq_sample_rec.value = float(data_row[results_ndx].value)
