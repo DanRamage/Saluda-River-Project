@@ -13,3 +13,4 @@ ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/sc_rivers_engine.in
 
 [MonitorEmail]
 ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/passworded_options.ini
+email_only_on_file_download=True

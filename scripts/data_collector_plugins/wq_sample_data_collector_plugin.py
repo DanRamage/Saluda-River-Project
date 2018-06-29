@@ -21,6 +21,7 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
   def __init__(self):
     data_collector_plugin.__init__(self)
     self.output_queue = None
+    self.email_only_on_file_download = False
 
   def initialize_plugin(self, **kwargs):
     try:
@@ -28,7 +29,9 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
 
       self.ini_file = plugin_details.get('Settings', 'ini_file')
       self.output_queue = kwargs['queue']
-
+      #If this flag is set, we only send out an email if we downloaded the sample XLS file.
+      #Otherwise we email every time we check for a file to download.
+      self.email_only_on_file_download = plugin_details.get("MonitorEmail", "email_only_on_file_download")
       email_ini_file = plugin_details.get("MonitorEmail", "ini_file")
       config_file = ConfigParser.RawConfigParser()
       config_file.read(email_ini_file)
@@ -109,25 +112,29 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
           self.output_queue.put((data_result_types.SAMPLING_DATA_TYPE, wq_data_collection))
 
           try:
+            send_email = True
             self.logger.debug("Emailing sample data collector file list.")
             if len(renamed_files):
               mail_body = "Files: %s downloaded and processed" % (renamed_files)
             else:
               mail_body = "ERROR: No files downloaded."
-            subject = "[WQ]Saluda River Sample Data"
-            # Now send the email.
-            smtp = smtpClass(host=self.monitor_mailhost,
-                             user=self.monitor_user,
-                             password=self.monitor_password,
-                             port=self.port,
-                             use_tls=True)
+              if self.email_only_on_file_download:
+                send_email = False
+            if send_email:
+              subject = "[WQ]Saluda River Sample Data"
+              # Now send the email.
+              smtp = smtpClass(host=self.monitor_mailhost,
+                               user=self.monitor_user,
+                               password=self.monitor_password,
+                               port=self.port,
+                               use_tls=True)
 
-            smtp.rcpt_to(self.monitor_toaddrs)
-            smtp.from_addr(self.monitor_fromaddr)
-            smtp.subject(subject)
-            smtp.message(mail_body)
-            smtp.send(content_type="text")
-            self.logger.debug("Finished emailing sample data collector file list.")
+              smtp.rcpt_to(self.monitor_toaddrs)
+              smtp.from_addr(self.monitor_fromaddr)
+              smtp.subject(subject)
+              smtp.message(mail_body)
+              smtp.send(content_type="text")
+              self.logger.debug("Finished emailing sample data collector file list.")
           except Exception as e:
             if self.logger:
               self.logger.exception(e)
