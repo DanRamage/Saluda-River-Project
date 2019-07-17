@@ -52,9 +52,11 @@ class twitter_output_plugin(output_plugin):
         for site in failed_sites:
           wq_site = site['wq_site']
           test_results = site['test_result']
-          twit_api.PostUpdate("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
+          #twit_api.PostUpdate("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
+          self.logger.debug("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
       else:
-        twit_api.PostUpdate("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
+        self.logger.debug("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
+        #twit_api.PostUpdate("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
 
       self.create_screenshot(twit_api, sample_date)
     except Exception as e:
@@ -80,7 +82,7 @@ class twitter_output_plugin(output_plugin):
       driver = webdriver.Firefox(options=options, firefox_binary=firefox_binary, executable_path=geckodriver_binary)
       driver.get(url_to_screenshot)
       #To make sure everything has rendered, we wait to see that the element ID on the page, "latest_sample", is there.
-      WebDriverWait(driver, 10).until(lambda x: x.find_element_by_id("latest_sample"))
+      WebDriverWait(driver, 30).until(lambda x: x.find_element_by_id("latest_sample"))
       screenshot_filename = os.path.join(output_directory, "%s.png" % (now_time.strftime("%Y_%m_%d_%H_%M")))
       self.logger.debug("Destination file: %s" % (screenshot_filename))
       driver.save_screenshot(screenshot_filename)
@@ -93,7 +95,7 @@ class twitter_output_plugin(output_plugin):
       combined_img_filename = os.path.join(output_directory, "%s_branded.png" % (now_time.strftime("%Y_%m_%d_%H_%M")))
       screenshot_image.save(combined_img_filename)
       driver.quit()
-      tweet_text = ("Sample Date: %s" % (sample_date))
+      tweet_text = ("Sample Date: %s\n%s" % (sample_date, url_to_screenshot))
       twit_api.PostUpdate(tweet_text, media=combined_img_filename)
 
       self.logger.debug("Screenshot finished in %f seconds" % (time.time()-start_time))
