@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 from pytz import timezone
 import time
 import optparse
-import ConfigParser
+import optparse
+if sys.version_info[0] < 3:
+  import ConfigParser
+else:
+  import configparser as ConfigParser
 import poplib
 import email
 from xlrd import xldate
@@ -57,31 +61,39 @@ def check_email_for_update(config_filename):
         response = pop3_obj.retr(msg_num)
         raw_message = response[1]
 
-        str_message = email.message_from_string("\n".join(raw_message))
+        if sys.version_info[0] < 3:
+          str_message = email.message_from_string("\n".join(raw_message))
+        else:
+          msg_content = b'\r\n'.join(raw_message).decode('utf-8')
+          str_message = email.message_from_string(msg_content)
 
-        # save attach
-        for part in str_message.walk():
-          logger.debug("Content type: %s" % (part.get_content_type()))
+        if str_message.get_content_type() == 'multipart/mixed':
+          # save attach
+          for part in str_message.walk():
+            logger.debug("Content type: %s" % (part.get_content_type()))
 
-          if part.get_content_maintype() == 'multipart':
-            continue
+            if part.get_content_maintype() == 'multipart':
+              continue
 
-          if part.get('Content-Disposition') is None:
-            logger.debug("No content disposition")
-            continue
+            if part.get('Content-Disposition') is None:
+              logger.debug("No content disposition")
+              continue
 
-          filename = part.get_filename()
-          if filename.find('xlsx') != -1 or filename.find('xls') != -1:
-            download_time = datetime.now()
-            logger.debug("Attached filename: %s" % (filename))
-            save_file = "%s_%s" % (download_time.strftime("%Y-%m-%d_%H_%M_%S"), filename)
-            saved_file_name = os.path.join(destination_directory, save_file)
-            logger.debug("Saving file as filename: %s" % (saved_file_name))
-            with open(saved_file_name, 'wb') as out_file:
-              out_file.write(part.get_payload(decode=1))
-              out_file.close()
-              file_list.append(saved_file_name)
-              pop3_obj.dele(msg_num)
+            filename = part.get_filename()
+            if filename.find('xlsx') != -1 or filename.find('xls') != -1:
+              download_time = datetime.now()
+              logger.debug("Attached filename: %s" % (filename))
+              save_file = "%s_%s" % (download_time.strftime("%Y-%m-%d_%H_%M_%S"), filename)
+              saved_file_name = os.path.join(destination_directory, save_file)
+              logger.debug("Saving file as filename: %s" % (saved_file_name))
+              with open(saved_file_name, 'wb') as out_file:
+                out_file.write(part.get_payload(decode=1))
+                out_file.close()
+                file_list.append(saved_file_name)
+                #try:
+                #  pop3_obj.dele(msg_num)
+                #except Exception as e:
+                #  logger.exception(e)
 
     pop3_obj.quit()
 
@@ -175,7 +187,7 @@ def main():
   try:
     config_file = ConfigParser.RawConfigParser()
     config_file.read(options.config_file)
-  except Exception, e:
+  except Exception as e:
     raise
   else:
     logger = None
@@ -190,7 +202,7 @@ def main():
         logging.config.fileConfig(logConfFile)
         logger = logging.getLogger('sc_rivers_wq_data_harvest_logger')
         logger.info("Log file opened.")
-    except ConfigParser.Error, e:
+    except ConfigParser.Error as e:
       if logger:
         logger.exception(e)
     else:

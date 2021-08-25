@@ -9,7 +9,10 @@ from pytz import timezone
 import traceback
 import time
 import optparse
-import ConfigParser
+if sys.version_info[0] < 3:
+  import ConfigParser
+else:
+  import configparser as ConfigParser
 
 from yapsy.PluginManager import PluginManager
 from multiprocessing import Queue
@@ -98,7 +101,7 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
     try:
       entero_lo_limit = config_file.getint('limits', 'limit_lo')
       entero_hi_limit = config_file.getint('limits', 'limit_hi')
-    except ConfigParser.Error, e:
+    except ConfigParser.Error as e:
       if logger:
         logger.exception(e)
     else:
@@ -165,9 +168,55 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
                                 feedback_email=feedback_email,
                                 sample_date=sample_date)
         else:
+          if enable_output_plugins:
+            self.output_results(output_plugin_directories=output_plugin_dirs,
+                                failed_sites = [],
+                                feedback_email=feedback_email,
+                                sample_date=datetime.now())
           self.logger.debug("No sites/data found to create test objects.")
       except Exception as e:
         self.logger.exception(e)
+
+  def collect_data(self, **kwargs):
+    self.logger.info("Begin collect_data")
+    try:
+      simplePluginManager = PluginManager()
+      logging.getLogger('yapsy').setLevel(logging.DEBUG)
+      simplePluginManager.setCategoriesFilter({
+         "DataCollector": data_collector_plugin
+         })
+
+      # Tell it the default place(s) where to find plugins
+      self.logger.debug("Plugin directories: %s" % (kwargs['data_collector_plugin_directories']))
+      simplePluginManager.setPluginPlaces(kwargs['data_collector_plugin_directories'])
+
+      simplePluginManager.collectPlugins()
+
+      output_queue = Queue()
+      plugin_cnt = 0
+      plugin_start_time = time.time()
+      for plugin in simplePluginManager.getAllPlugins():
+        self.logger.info("Starting plugin: %s" % (plugin.name))
+        if plugin.plugin_object.initialize_plugin(details=plugin.details,
+                                                  queue=output_queue):
+          plugin.plugin_object.start()
+        else:
+          self.logger.error("Failed to initialize plugin: %s" % (plugin.name))
+        plugin_cnt += 1
+
+      #Wait for the plugings to finish up.
+      self.logger.info("Waiting for %d plugins to complete." % (plugin_cnt))
+      for plugin in simplePluginManager.getAllPlugins():
+        plugin.plugin_object.join()
+
+      while not output_queue.empty():
+        results = output_queue.get()
+        if results[0] == data_result_types.SAMPLING_DATA_TYPE:
+          self.bacteria_sample_data = results[1]
+
+      self.logger.info("%d Plugins completed in %f seconds" % (plugin_cnt, time.time() - plugin_start_time))
+    except Exception as e:
+      self.logger.exception(e)
 
   def collect_data(self, **kwargs):
     self.logger.info("Begin collect_data")
@@ -267,7 +316,7 @@ def main():
       logger.info("Log file opened.")
       use_logging = True
 
-  except ConfigParser.Error, e:
+  except ConfigParser.Error as e:
     traceback.print_exc(e)
     sys.exit(-1)
   else:
@@ -284,7 +333,7 @@ def main():
           #Convert to UTC
           begin_date = est.astimezone(timezone('UTC'))
           dates_to_process.append(begin_date)
-      except Exception,e:
+      except Exception as e:
         if logger:
           logger.exception(e)
     else:
@@ -303,7 +352,7 @@ def main():
                         config_file_name=options.config_file)
         #run_wq_models(begin_date=process_date,
         #              config_file_name=options.config_file)
-    except Exception, e:
+    except Exception as e:
       logger.exception(e)
 
   if logger:
