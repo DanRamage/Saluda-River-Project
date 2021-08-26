@@ -3,8 +3,13 @@ sys.path.append('../')
 sys.path.append('../../commonfiles/python')
 import os
 import logging.config
-from data_collector_plugin import data_collector_plugin
-import ConfigParser
+#from data_collector_plugin import data_collector_plugin
+import data_collector_plugin as my_plugin
+import optparse
+if sys.version_info[0] < 3:
+  import ConfigParser
+else:
+  import configparser as ConfigParser
 import traceback
 import time
 #from yapsy.IPlugin import IPlugin
@@ -16,10 +21,11 @@ from wq_output_results import wq_sample_data,wq_samples_collection,wq_advisories
 from data_result_types import data_result_types
 from smtp_utils import smtpClass
 
-class wq_sample_data_collector_plugin(data_collector_plugin):
+class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
 
   def __init__(self):
-    data_collector_plugin.__init__(self)
+    #data_collector_plugin.__init__(self)
+    super().__init__()
     self.output_queue = None
     self.email_only_on_file_download = False
 
@@ -54,13 +60,10 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
       config_file = ConfigParser.RawConfigParser()
       config_file.read(self.ini_file)
 
-      logger = None
-      log_conf_file = config_file.get('logging', 'config_file')
-      if log_conf_file:
-        logging.config.fileConfig(log_conf_file)
-        logger = logging.getLogger('sc_rivers_wq_data_harvest_logger')
-        logger.info("Log file opened.")
-    except ConfigParser.Error, e:
+      logging.config.fileConfig(self.log_conf_file)
+      logger = logging.getLogger()
+      logger.info("Log file opened.")
+    except ConfigParser.Error as e:
       traceback.print_exc("No log configuration file given, logging disabled.")
     else:
       try:
@@ -70,7 +73,7 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
         results_file = config_file.get('json_settings', 'advisory_results')
         station_results_directory = config_file.get('json_settings', 'station_results_directory')
 
-      except ConfigParser.Error, e:
+      except ConfigParser.Error as e:
         logger.exception(e)
       else:
         try:
@@ -98,7 +101,7 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
               except Exception as e:
                 logger.exception(e)
             else:
-              self.logger.error("File: %s is not the excel file we are looking for.")
+              logger.error("File: %s is not the excel file we are looking for.")
 
           # Create the geojson files if we have results
           #if len(wq_data_collection):
@@ -136,13 +139,11 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
               smtp.send(content_type="text")
               self.logger.debug("Finished emailing sample data collector file list.")
           except Exception as e:
-            if self.logger:
-              self.logger.exception(e)
+            logger.exception(e)
 
           if logger is not None:
             logger.info("Log file closed.")
-        except Exception, e:
-          if(logger):
+        except Exception as e:
             logger.exception(e)
       self.logger.debug("run finished in %f seconds." % (time.time() - start_time))
     return
