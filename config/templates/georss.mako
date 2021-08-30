@@ -1,23 +1,27 @@
-<?xml version="2.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"
-      xmlns:georss="http://www.georss.org/georss">
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+     xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel>
     <title>${title}</title>
-    <subtitle>${subtitle}</subtitle>
     <link href='${site_url}'/>
-    <updated>${update_datetime}</updated>
-    <author>
-        <name>${author}</name>
-        <email>${author_email}</email>
-    </author>
-    <id>${main_id}</id>
+    <description>${subtitle}</description>
+    <dc:publisher>${publisher}</dc:publisher>
+    <pubDate>${update_datetime}</pubDate>
     % for georss_rec in georss_recs:
-        <entry>
+        <item>
             <title>${georss_rec.title}</title>
             <link href='${georss_rec.link}'/>
-            <id>${georss_rec.id}</id>
-            <updated>${georss_rec.update_datetime}</updated>
-            <summary>${georss_rec.summary}</summary>
-            <georss:point>${georss_rec.longitude} ${georss_rec.latitude}</georss:point>
-        </entry>
+            <guid isPermaLink="true">${georss_rec.id}</guid>
+            <pubDate>${georss_rec.update_datetime}</pubDate>
+            <description>${georss_rec.summary}</description>
+            <geo:long>${georss_rec.longitude}</geo:long>
+            <geo:lat>${georss_rec.latitude}</geo:lat>
+            <georss:where>
+              <gml:Point>
+                <gml:pos>${georss_rec.latitude} ${georss_rec.longitude}</gml:pos>
+              </gml:Point>
+            </georss:where>
+        </item>
     % endfor
-</feed>
+</channel>
