@@ -10,6 +10,7 @@ Description = Checks for a recently emailed bacteria sample report.
 
 [Settings]
 ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/sc_rivers_engine.ini
+log_file=/home/xeniaprod/scripts/Saluda-River-Project/config/logconf/sc_rivers_get_wq_sample_data.conf
 
 [MonitorEmail]
 ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/passworded_options.ini
