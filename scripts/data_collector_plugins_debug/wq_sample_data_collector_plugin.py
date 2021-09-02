@@ -3,23 +3,30 @@ sys.path.append('../')
 sys.path.append('../../commonfiles/python')
 import os
 import logging.config
-from data_collector_plugin import data_collector_plugin
-import ConfigParser
+#from data_collector_plugin import data_collector_plugin
+import data_collector_plugin as my_plugin
+import optparse
+if sys.version_info[0] < 3:
+  import ConfigParser
+else:
+  import configparser as ConfigParser
 import traceback
 import time
 #from yapsy.IPlugin import IPlugin
 #from multiprocessing import Process
-
+#import multiprocessing
+#multiprocessing.set_start_method('fork')
 from get_wq_sample_data import check_email_for_update,parse_sheet_data
 from wq_sites import wq_sample_sites
 from wq_output_results import wq_sample_data,wq_samples_collection,wq_advisories_file,wq_station_advisories_file
 from data_result_types import data_result_types
 from smtp_utils import smtpClass
 
-class wq_sample_data_collector_plugin(data_collector_plugin):
+class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
 
   def __init__(self):
-    data_collector_plugin.__init__(self)
+    #data_collector_plugin.__init__(self)
+    super().__init__()
     self.output_queue = None
 
   def initialize_plugin(self, **kwargs):
@@ -27,6 +34,8 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
       plugin_details = kwargs['details']
 
       self.ini_file = plugin_details.get('Settings', 'ini_file')
+      self.log_conf_file = plugin_details.get('Settings', 'log_file')
+      self.test_data_file = plugin_details.get("Settings", "test_data_file")
       self.output_queue = kwargs['queue']
 
       email_ini_file = plugin_details.get("MonitorEmail", "ini_file")
@@ -39,7 +48,6 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
       self.monitor_subject = config_file.get("sample_data_collector_plugin", "subject")
       self.monitor_user = config_file.get("sample_data_collector_plugin", "user")
       self.monitor_password = config_file.get("sample_data_collector_plugin", "password")
-
       return True
     except Exception as e:
       self.logger.exception(e)
@@ -51,13 +59,10 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
       config_file = ConfigParser.RawConfigParser()
       config_file.read(self.ini_file)
 
-      logger = None
-      log_conf_file = config_file.get('logging', 'config_file')
-      if log_conf_file:
-        logging.config.fileConfig(log_conf_file)
-        logger = logging.getLogger('sc_rivers_wq_data_harvest_logger')
-        logger.info("Log file opened.")
-    except ConfigParser.Error, e:
+      logging.config.fileConfig(self.log_conf_file)
+      logger = logging.getLogger()
+      logger.info("Log file opened.")
+    except ConfigParser.Error as e:
       traceback.print_exc("No log configuration file given, logging disabled.")
     else:
       try:
@@ -67,14 +72,18 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
         results_file = config_file.get('json_settings', 'advisory_results')
         station_results_directory = config_file.get('json_settings', 'station_results_directory')
 
-      except ConfigParser.Error, e:
+      except ConfigParser.Error as e:
         logger.exception(e)
       else:
         try:
           wq_sites = wq_sample_sites()
           wq_sites.load_sites(file_name=sites_location_file, boundary_file=boundaries_location_file)
 
-          wq_data_files = check_email_for_update(self.ini_file)
+          if len(self.test_data_file) == 0:
+            wq_data_files = check_email_for_update(self.ini_file)
+          else:
+            logger.debug("Using test file: %s" % (self.test_data_file))
+            wq_data_files = [self.test_data_file]
           if logger is not None:
             logger.debug("Files: %s found" % (wq_data_files))
 
@@ -95,7 +104,7 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
               except Exception as e:
                 logger.exception(e)
             else:
-              self.logger.error("File: %s is not the excel file we are looking for.")
+              logger.error("File: %s is not the excel file we are looking for.")
 
           # Create the geojson files if we have results
           #if len(wq_data_collection):
@@ -109,33 +118,33 @@ class wq_sample_data_collector_plugin(data_collector_plugin):
           self.output_queue.put((data_result_types.SAMPLING_DATA_TYPE, wq_data_collection))
 
           try:
-            self.logger.debug("Emailing sample data collector file list.")
+            logger.debug("Emailing sample data collector file list.")
             if len(renamed_files):
               mail_body = "Files: %s downloaded and processed" % (renamed_files)
             else:
               mail_body = "ERROR: No files downloaded."
-            subject = "[WQ]Saluda River Sample Data"
-            # Now send the email.
-            smtp = smtpClass(host=self.monitor_mailhost,
-                             user=self.monitor_user,
-                             password=self.monitor_password,
-                             port=self.port,
-                             use_tls=True)
+              if self.email_only_on_file_download:
+                send_email = False
+            if send_email:
+              subject = "[WQ]Saluda River Sample Data"
+              # Now send the email.
+              smtp = smtpClass(host=self.monitor_mailhost,
+                               user=self.monitor_user,
+                               password=self.monitor_password,
+                               port=self.port,
+                               use_tls=True)
 
-            smtp.rcpt_to(self.monitor_toaddrs)
-            smtp.from_addr(self.monitor_fromaddr)
-            smtp.subject(subject)
-            smtp.message(mail_body)
-            smtp.send(content_type="text")
-            self.logger.debug("Finished emailing sample data collector file list.")
+              smtp.rcpt_to(self.monitor_toaddrs)
+              smtp.from_addr(self.monitor_fromaddr)
+              smtp.subject(subject)
+              smtp.message(mail_body)
+              smtp.send(content_type="text")
+              self.logger.debug("Finished emailing sample data collector file list.")
           except Exception as e:
-            if self.logger:
-              self.logger.exception(e)
-
-          if logger is not None:
-            logger.info("Log file closed.")
-        except Exception, e:
-          if(logger):
             logger.exception(e)
-      self.logger.debug("run finished in %f seconds." % (time.time() - start_time))
+
+          logger.info("Log file closed.")
+          logger.debug("run finished in %f seconds." % (time.time() - start_time))
+        except Exception as e:
+          logger.exception(e)
     return
