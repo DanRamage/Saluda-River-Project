@@ -58,7 +58,7 @@ class reddit_output_plugin(output_plugin):
                 if len(output_text_list) == 0:
                     output_text_list.append("* No sites show elevated bacteria levels.")
 
-                output_text_list.append("[My SC Rivers Webiste](https://reddit.com)")
+                output_text_list.append("[My SC Rivers Website](https://howsmyscriver.org)")
                 output_text_list.append("[My SC Rivers Twitter](https://twitter.com/myscriver)")
                 output_text_list.append("Auto posted by MySCRiversBot")
                 output_text = '\n\n'.join(output_text_list)
