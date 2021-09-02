@@ -14,7 +14,7 @@ ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/sc_rivers_engine.in
 [Template_Settings]
 output_directory=/mnt/wq_feeds/sc_rivers/rss
 output_filename=midlandsrivers.rss
-template_file=/home/xeniaprod/scripts/Saluda-River-Project/config/templates/georss.mako
+template_file=/home/xeniaprod/scripts/Saluda-River-Project/config/templates/geoatom.mako
 
 title = Midlands River Coalition
 subtitle = GeoRSS Feed for Current Results
