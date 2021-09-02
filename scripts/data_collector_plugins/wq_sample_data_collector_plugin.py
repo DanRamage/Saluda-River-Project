@@ -25,8 +25,8 @@ from smtp_utils import smtpClass
 class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
 
   def __init__(self):
-    #data_collector_plugin.__init__(self)
-    super().__init__()
+    data_collector_plugin.__init__(self)
+    #super().__init__()
     self.output_queue = None
 
   def initialize_plugin(self, **kwargs):
