@@ -28,6 +28,7 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
     data_collector_plugin.__init__(self)
     #super().__init__()
     self.output_queue = None
+    self.email_only_on_file_download = False
 
   def initialize_plugin(self, **kwargs):
     try:
@@ -37,7 +38,9 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
       self.log_conf_file = plugin_details.get('Settings', 'log_file')
       self.test_data_file = plugin_details.get("Settings", "test_data_file")
       self.output_queue = kwargs['queue']
-
+      #If this flag is set, we only send out an email if we downloaded the sample XLS file.
+      #Otherwise we email every time we check for a file to download.
+      self.email_only_on_file_download = plugin_details.get("MonitorEmail", "email_only_on_file_download")
       email_ini_file = plugin_details.get("MonitorEmail", "ini_file")
       config_file = ConfigParser.RawConfigParser()
       config_file.read(email_ini_file)
