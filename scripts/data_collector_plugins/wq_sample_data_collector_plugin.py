@@ -14,7 +14,8 @@ import traceback
 import time
 #from yapsy.IPlugin import IPlugin
 #from multiprocessing import Process
-
+#import multiprocessing
+#multiprocessing.set_start_method('fork')
 from get_wq_sample_data import check_email_for_update,parse_sheet_data
 from wq_sites import wq_sample_sites
 from wq_output_results import wq_sample_data,wq_samples_collection,wq_advisories_file,wq_station_advisories_file
@@ -27,17 +28,16 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
     #data_collector_plugin.__init__(self)
     super().__init__()
     self.output_queue = None
-    self.email_only_on_file_download = False
 
   def initialize_plugin(self, **kwargs):
     try:
       plugin_details = kwargs['details']
 
       self.ini_file = plugin_details.get('Settings', 'ini_file')
+      self.log_conf_file = plugin_details.get('Settings', 'log_file')
+      self.test_data_file = plugin_details.get("Settings", "test_data_file")
       self.output_queue = kwargs['queue']
-      #If this flag is set, we only send out an email if we downloaded the sample XLS file.
-      #Otherwise we email every time we check for a file to download.
-      self.email_only_on_file_download = plugin_details.get("MonitorEmail", "email_only_on_file_download")
+
       email_ini_file = plugin_details.get("MonitorEmail", "ini_file")
       config_file = ConfigParser.RawConfigParser()
       config_file.read(email_ini_file)
@@ -48,7 +48,6 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
       self.monitor_subject = config_file.get("sample_data_collector_plugin", "subject")
       self.monitor_user = config_file.get("sample_data_collector_plugin", "user")
       self.monitor_password = config_file.get("sample_data_collector_plugin", "password")
-
       return True
     except Exception as e:
       self.logger.exception(e)
@@ -80,7 +79,11 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
           wq_sites = wq_sample_sites()
           wq_sites.load_sites(file_name=sites_location_file, boundary_file=boundaries_location_file)
 
-          wq_data_files = check_email_for_update(self.ini_file)
+          if len(self.test_data_file) == 0:
+            wq_data_files = check_email_for_update(self.ini_file)
+          else:
+            logger.debug("Using test file: %s" % (self.test_data_file))
+            wq_data_files = [self.test_data_file]
           if logger is not None:
             logger.debug("Files: %s found" % (wq_data_files))
 
@@ -115,8 +118,7 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
           self.output_queue.put((data_result_types.SAMPLING_DATA_TYPE, wq_data_collection))
 
           try:
-            send_email = True
-            self.logger.debug("Emailing sample data collector file list.")
+            logger.debug("Emailing sample data collector file list.")
             if len(renamed_files):
               mail_body = "Files: %s downloaded and processed" % (renamed_files)
             else:
@@ -141,9 +143,8 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
           except Exception as e:
             logger.exception(e)
 
-          if logger is not None:
-            logger.info("Log file closed.")
+          logger.info("Log file closed.")
+          logger.debug("run finished in %f seconds." % (time.time() - start_time))
         except Exception as e:
-            logger.exception(e)
-      self.logger.debug("run finished in %f seconds." % (time.time() - start_time))
+          logger.exception(e)
     return
