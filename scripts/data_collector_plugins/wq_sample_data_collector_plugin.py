@@ -121,6 +121,7 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
           self.output_queue.put((data_result_types.SAMPLING_DATA_TYPE, wq_data_collection))
 
           try:
+            send_email = True
             logger.debug("Emailing sample data collector file list.")
             if len(renamed_files):
               mail_body = "Files: %s downloaded and processed" % (renamed_files)
