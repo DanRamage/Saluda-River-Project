@@ -9,7 +9,7 @@ Website = http://howsmyscriver.org
 Description = Saluda River Coalition GeoRSS
 
 [Settings]
-ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/passworded_options.ini
+ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/sc_rivers_engine.ini
 
 [Template_Settings]
 output_directory=/mnt/wq_feeds/sc_rivers/rss
