@@ -4,10 +4,9 @@ import os
 import logging.config
 if sys.version_info[0] < 3:
   import ConfigParser
-  import twitter
 else:
   import configparser as ConfigParser
-  from twitter import  *
+import twitter
 import time
 from datetime import datetime
 from PIL import Image
@@ -42,17 +41,10 @@ class twitter_output_plugin(output_plugin):
 
   def emit(self, **kwargs):
     self.logger.debug("Starting emit for twitter output.")
-    try:
-      if sys.version_info[0] < 3:
-        twit_api = twitter.Api(consumer_key=self.consumer_key,
-                          consumer_secret=self.consumer_secret,
-                          access_token_key=self.access_token,
-                          access_token_secret=self.access_token_secret)
-      else:
-        twit_api = twitter.Api(consumer_key=self.consumer_key,
-                          consumer_secret=self.consumer_secret,
-                          access_token_key=self.access_token,
-                          access_token_secret=self.access_token_secret)
+      twit_api = twitter.Api(consumer_key=self.consumer_key,
+                        consumer_secret=self.consumer_secret,
+                        access_token_key=self.access_token,
+                        access_token_secret=self.access_token_secret)
 
       self.logger.debug(twit_api.VerifyCredentials())
       failed_sites = kwargs['failed_sites']
