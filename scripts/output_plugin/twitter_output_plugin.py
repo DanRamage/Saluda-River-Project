@@ -2,8 +2,12 @@ import sys
 sys.path.append('../../commonfiles/python')
 import os
 import logging.config
-import twitter
-import ConfigParser
+if sys.version_info[0] < 3:
+  import ConfigParser
+  import twitter
+else:
+  import configparser as ConfigParser
+  from twitter import  *
 import time
 from datetime import datetime
 from PIL import Image
@@ -39,10 +43,17 @@ class twitter_output_plugin(output_plugin):
   def emit(self, **kwargs):
     self.logger.debug("Starting emit for twitter output.")
     try:
-      twit_api = twitter.Api(consumer_key=self.consumer_key,
-                        consumer_secret=self.consumer_secret,
-                        access_token_key=self.access_token,
-                        access_token_secret=self.access_token_secret)
+      if sys.version_info[0] < 3:
+        twit_api = twitter.Api(consumer_key=self.consumer_key,
+                          consumer_secret=self.consumer_secret,
+                          access_token_key=self.access_token,
+                          access_token_secret=self.access_token_secret)
+      else:
+        twit_api = Twitter(consumer_key=self.consumer_key,
+                          consumer_secret=self.consumer_secret,
+                          access_token_key=self.access_token,
+                          access_token_secret=self.access_token_secret)
+
       self.logger.debug(twit_api.VerifyCredentials())
       failed_sites = kwargs['failed_sites']
       sample_date = kwargs['sampling_date'].strftime("%Y-%m-%d")
@@ -52,11 +63,11 @@ class twitter_output_plugin(output_plugin):
         for site in failed_sites:
           wq_site = site['wq_site']
           test_results = site['test_result']
-          #twit_api.PostUpdate("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
+          twit_api.PostUpdate("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
           self.logger.debug("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
       else:
         self.logger.debug("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
-        #twit_api.PostUpdate("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
+        twit_api.PostUpdate("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
 
       self.create_screenshot(twit_api, sample_date)
     except Exception as e:
