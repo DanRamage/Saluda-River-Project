@@ -41,6 +41,7 @@ class twitter_output_plugin(output_plugin):
 
   def emit(self, **kwargs):
     self.logger.debug("Starting emit for twitter output.")
+    try:
       twit_api = twitter.Api(consumer_key=self.consumer_key,
                         consumer_secret=self.consumer_secret,
                         access_token_key=self.access_token,
