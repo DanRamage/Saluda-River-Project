@@ -170,11 +170,13 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
                                 feedback_email=feedback_email,
                                 sample_date=sample_date)
         else:
+          '''
           if enable_output_plugins:
             self.output_results(output_plugin_directories=output_plugin_dirs,
                                 failed_sites = [],
                                 feedback_email=feedback_email,
                                 sample_date=datetime.now())
+          '''
           self.logger.debug("No sites/data found to create test objects.")
       except Exception as e:
         self.logger.exception(e)
