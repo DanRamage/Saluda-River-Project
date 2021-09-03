@@ -16,6 +16,8 @@ else:
 
 from yapsy.PluginManager import PluginManager
 from multiprocessing import Queue
+import multiprocessing
+multiprocessing.set_start_method('fork')
 
 from wq_prediction_tests import predictionTest,predictionLevels
 
@@ -176,7 +178,7 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
           self.logger.debug("No sites/data found to create test objects.")
       except Exception as e:
         self.logger.exception(e)
-
+  '''
   def collect_data(self, **kwargs):
     self.logger.info("Begin collect_data")
     try:
@@ -217,12 +219,16 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
       self.logger.info("%d Plugins completed in %f seconds" % (plugin_cnt, time.time() - plugin_start_time))
     except Exception as e:
       self.logger.exception(e)
-
+  '''
   def collect_data(self, **kwargs):
     self.logger.info("Begin collect_data")
     try:
       simplePluginManager = PluginManager()
-      logging.getLogger('yapsy').setLevel(logging.DEBUG)
+      #logging.getLogger('yapsy').setLevel(logging.DEBUG)
+      yapsy_log = logging.getLogger('yapsy')
+      yapsy_log.setLevel(logging.DEBUG)
+      yapsy_log.disabled = False
+
       simplePluginManager.setCategoriesFilter({
          "DataCollector": data_collector_plugin
          })
@@ -296,6 +302,8 @@ def main():
                     help="INI Configuration file." )
   parser.add_option("-s", "--StartDateTime", dest="start_date_time",
                     help="A date to re-run the predictions for, if not provided, the default is the current day. Format is YYYY-MM-DD HH:MM:SS." )
+  parser.add_option("-t", "--TestMode", dest="test_mode", action="store_true", default=False,
+                    help="If set, puts us in test mode." )
 
   (options, args) = parser.parse_args()
 
