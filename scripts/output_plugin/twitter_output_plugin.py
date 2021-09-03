@@ -49,7 +49,7 @@ class twitter_output_plugin(output_plugin):
                           access_token_key=self.access_token,
                           access_token_secret=self.access_token_secret)
       else:
-        twit_api = Twitter(consumer_key=self.consumer_key,
+        twit_api = twitter.Api(consumer_key=self.consumer_key,
                           consumer_secret=self.consumer_secret,
                           access_token_key=self.access_token,
                           access_token_secret=self.access_token_secret)
