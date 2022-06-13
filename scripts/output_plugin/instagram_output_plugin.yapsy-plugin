@@ -1,0 +1,23 @@
+[Core]
+Name = Saluda River Instagram Plugin
+Module = instagram_output_plugin
+
+[Documentation]
+Author = Dan Ramage
+Version = 0.1
+Website = http://howsmyscriver.org
+Description = Saluda River Coalition Instagram Account
+
+[Authentication]
+ini_file=/home/xeniaprod/scripts/Saluda-River-Project/config/passworded_options.ini
+
+[instagram_settings]
+instagram_bot_base_path=/tmp/instagram
+tags=#congareeriver #saludariver #congareeriverkeeper #columbiasc #saludashoals #saludashoalspark #saludariverwalk
+
+[screenshot_settings]
+url_to_screenshot=http://howsmyscriver.org/midlands
+output_directory=/tmp
+logo_file=/home/xeniaprod/scripts/Saluda-River-Project/scripts/images/midlands_logo_round.png
+firefox_binary=/usr/bin/firefox
+geckodriver_binary=/usr/local/bin/geckodriver
