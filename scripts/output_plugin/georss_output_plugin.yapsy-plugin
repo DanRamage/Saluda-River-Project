@@ -18,7 +18,7 @@ template_file=/home/xeniaprod/scripts/Saluda-River-Project/config/templates/geoa
 
 title = Midlands River Coalition
 subtitle = GeoRSS Feed for Current Results
-site_url = https://howsmyscrivers.org
+site_url = https://howsmyscriver.org
 author = MySCRivers
 author_email = myscrivers@gmail.com
 
