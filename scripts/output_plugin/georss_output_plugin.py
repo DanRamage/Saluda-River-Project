@@ -90,6 +90,7 @@ class georss_output_plugin(output_plugin):
                 rss_rec = georss(title=wq_site.name,
                                  link="https://howsmyscriver.org",
                                  id=station_id,
+                                 publisher="MySCRivers",
                                  update_datetime=station_sample_date,
                                  longitude=wq_site.object_geometry.x,
                                  latitude=wq_site.object_geometry.y
