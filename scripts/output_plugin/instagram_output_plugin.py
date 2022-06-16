@@ -55,12 +55,12 @@ class instagram_output_plugin(output_plugin):
       insta_message = []
       if len(failed_sites):
 
-        for wq_site in failed_sites:
-          insta_message.append("Site: %s %s shows elevated bacteria levels." % (wq_site.name, wq_site.description))
-          self.logger.debug("Sample Date: %s Site: %s %s shows elevated bacteria levels." %(sample_date, wq_site.name, wq_site.description))
+        for site in failed_sites:
+          insta_message.append("Site: %s %s shows elevated bacteria levels." % (site['wq_site'].name, site['wq_site'].description))
+          self.logger.debug("Sample Date: %s Site: %s %s shows elevated bacteria levels." % (sample_date, site['wq_site'].name, site['wq_site'].description))
       else:
-        self.logger.debug("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
         insta_message.append("No sites show elevated bacteria levels.")
+        self.logger.debug("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
 
       insta_message.append(self._tags)
       self.create_screenshot(insta_bot, sample_date, insta_message)

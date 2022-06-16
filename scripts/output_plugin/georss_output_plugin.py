@@ -42,7 +42,7 @@ class georss_output_plugin(output_plugin):
             self.site_url  = self.details.get('Template_Settings', 'site_url')
             self.author  = self.details.get('Template_Settings', 'author')
             self.author_email  = self.details.get('Template_Settings', 'author_email')
-            self.uuid_file = self.details.get('Template_Settings', 'station_uuid_file')
+            #self.uuid_file = self.details.get('Template_Settings', 'station_uuid_file')
             return True
         except Exception as e:
             self.logger.exception(e)
@@ -64,6 +64,7 @@ class georss_output_plugin(output_plugin):
             wq_sites = wq_sample_sites()
             wq_sites.load_sites(file_name=sites_location_file, boundary_file=boundaries_location_file)
             #Get the uuids, if there are any.
+            '''
             self.uuids = {}
             try:
                 uuid_file = open(self.uuid_file, "r")
@@ -72,16 +73,18 @@ class georss_output_plugin(output_plugin):
                     self.uuids[station] = uuid_val.strip()
             except IOError:
                 uuid_file = open(self.uuid_file, "w")
-
+            '''
             georss_recs = []
             georss_failed_recs = []
             for wq_site in wq_sites:
+                '''
                 if wq_site.name in self.uuids:
                     station_id = self.uuids[wq_site.name]
                 else:
                     station_id = uuid.uuid4()
                     uuid_file.write("{station_id}={uuid_val}\n".format(station_id=wq_site.name,
                                                                      uuid_val=station_id))
+                '''
                 try:
                     sample_data = sampling_data[wq_site.name][0]
                     station_sample_date = sample_data.date_time.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -89,7 +92,7 @@ class georss_output_plugin(output_plugin):
                     station_sample_date = sample_date
                 rss_rec = georss(title=wq_site.name,
                                  link="https://howsmyscriver.org",
-                                 id=station_id,
+                                 id="https://howsmyscriver.org",
                                  publisher="MySCRivers",
                                  update_datetime=station_sample_date,
                                  longitude=wq_site.object_geometry.x,
@@ -112,13 +115,14 @@ class georss_output_plugin(output_plugin):
             try:
                 mytemplate = Template(filename=self.template_file)
                 results_outfile = os.path.join(self.output_directory, self.output_filename)
+                '''
                 if 'main_id' in self.uuids:
                     main_id = self.uuids['main_id']
                 else:
                     main_id = uuid.uuid4()
                     uuid_file.write("{station_id}={uuid_val}\n".format(station_id='main_id',
                                                                      uuid_val=main_id))
-
+                '''
                 with open(results_outfile, "w") as result_file_obj:
                     results_report = mytemplate.render(title=self.title,
                                                        subtitle=self.subtitle,
@@ -126,7 +130,7 @@ class georss_output_plugin(output_plugin):
                                                        update_datetime=sample_date,
                                                        author=self.author,
                                                        author_email=self.author_email,
-                                                       main_id=main_id,
+                                                       main_id="https://howsmyscriver.org",
                                                        georss_recs=georss_failed_recs)
                     result_file_obj.write(results_report)
             except TypeError as e:
@@ -135,7 +139,7 @@ class georss_output_plugin(output_plugin):
             except (IOError, AttributeError, Exception) as e:
                 if self.logger:
                     self.logger.exception(e)
-            uuid_file.close()
+            #uuid_file.close()
         except Exception as e:
             self.logger.exception(e)
 
