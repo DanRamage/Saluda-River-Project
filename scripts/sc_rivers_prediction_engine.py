@@ -121,9 +121,10 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
   def run_wq_models(self, **kwargs):
     today_date = datetime.now()
     try:
+      test_mode = kwargs.get('test_mode', False)
+
       config_file = ConfigParser.RawConfigParser()
       config_file.read(kwargs['config_file_name'])
-
       boundaries_location_file = config_file.get('boundaries_settings', 'boundaries_file')
       sites_location_file = config_file.get('boundaries_settings', 'sample_sites')
       wq_sites = wq_sample_sites()
@@ -155,20 +156,32 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
           for test in test_list:
             if sample_date is None:
               sample_date = test.test_time
-            if test.test_time.date() == sampling_date.date():
+            if not test_mode:
+              if test.test_time.date() == sampling_date.date():
+                if test.predictionLevel.value == predictionLevels.HIGH:
+                  for site in wq_sites:
+                    if site.name == test.name:
+                      failed_sites.append({
+                        'test_result':  test,
+                        'wq_site': site
+                      })
+                      break
+            else:
               if test.predictionLevel.value == predictionLevels.HIGH:
                 for site in wq_sites:
                   if site.name == test.name:
                     failed_sites.append({
-                      'test_result':  test,
+                      'test_result': test,
                       'wq_site': site
                     })
                     break
+
           if enable_output_plugins:
             self.output_results(output_plugin_directories=output_plugin_dirs,
                                 failed_sites = failed_sites,
                                 feedback_email=feedback_email,
-                                sample_date=sample_date)
+                                sample_date=sample_date,
+                                sampling_data=self.bacteria_sample_data)
         else:
           '''
           if enable_output_plugins:
@@ -288,6 +301,7 @@ class sc_rivers_prediction_engine(wq_prediction_engine):
       self.logger.info("Starting plugin: %s" % (plugin.name))
       if plugin.plugin_object.initialize_plugin(details=plugin.details):
         plugin.plugin_object.emit(sampling_date=kwargs['sample_date'],
+                                  sampling_data=kwargs['sampling_data'],
                                   failed_sites=kwargs['failed_sites'],
                                   feedback_email=kwargs['feedback_email'])
         plugin_cnt += 1
@@ -314,6 +328,7 @@ def main():
     sys.exit(-1)
 
   try:
+    test_mode = options.test_mode
     config_file = ConfigParser.RawConfigParser()
     config_file.read(options.config_file)
 
@@ -359,7 +374,8 @@ def main():
       for process_date in dates_to_process:
         sc_rivers_engine = sc_rivers_prediction_engine()
         sc_rivers_engine.run_wq_models(begin_date=process_date,
-                        config_file_name=options.config_file)
+                                        config_file_name=options.config_file,
+                                       test_mode=test_mode)
         #run_wq_models(begin_date=process_date,
         #              config_file_name=options.config_file)
     except Exception as e:
