@@ -90,9 +90,10 @@ class georss_output_plugin(output_plugin):
                     station_sample_date = sample_data.date_time.strftime("%Y-%m-%dT%H:%M:%SZ")
                 except KeyError:
                     station_sample_date = sample_date
+                station_uuid = uuid.uuid4()
                 rss_rec = georss(title=wq_site.name,
                                  link="https://howsmyscriver.org",
-                                 id="https://howsmyscriver.org",
+                                 id=f"howsmyscriver.org/{station_uuid}",
                                  publisher="MySCRivers",
                                  update_datetime=station_sample_date,
                                  longitude=wq_site.object_geometry.x,
