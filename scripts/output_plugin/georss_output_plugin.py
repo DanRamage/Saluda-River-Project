@@ -55,7 +55,7 @@ class georss_output_plugin(output_plugin):
             #EST = timezone('US/Eastern')
             #utc_sample_date = UTC.localize(EST.localize(kwargs['sampling_date']))
             failed_sites = kwargs['failed_sites']
-            sample_date = kwargs['sampling_date'].strftime("%Y-%m-%dT%H:%M:%SZ")
+            sample_date = kwargs['sampling_date'].strftime("%a, %d %b %Y 00:00:00 EST")
             sampling_data = kwargs['sampling_data']
             config_file = ConfigParser.RawConfigParser()
             config_file.read(self.ini_file)
@@ -86,8 +86,8 @@ class georss_output_plugin(output_plugin):
                                                                      uuid_val=station_id))
                 '''
                 try:
-                    sample_data = sampling_data[wq_site.name][0]
-                    station_sample_date = sample_data.date_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    sample_data = sampling_data[wq_site.name][0].date_time
+                    station_sample_date = sample_data.strftime("%a, %d %b %Y %H:%M:%S EST")
                 except KeyError:
                     station_sample_date = sample_date
                 station_uuid = uuid.uuid4()

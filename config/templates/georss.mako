@@ -4,15 +4,15 @@
      xmlns:dc="http://purl.org/dc/elements/1.1/">
     <channel>
         <title>${title}</title>
-        <link href='${site_url}'/>
+        <link>${site_url}</link>
         <description>${subtitle}</description>
         <dc:publisher>${author}</dc:publisher>
         <pubDate>${update_datetime}</pubDate>
         % for georss_rec in georss_recs:
             <item>
                 <title>${georss_rec.title}</title>
-                <link href='${georss_rec.link}'/>
-                <guid isPermaLink="true">${georss_rec.id}</guid>
+                <link>${georss_rec.link}</link>
+                <guid isPermaLink="false">${georss_rec.id}</guid>
                 <pubDate>${georss_rec.update_datetime}</pubDate>
                 <description>${georss_rec.summary}</description>
                 <geo:long>${georss_rec.longitude}</geo:long>
