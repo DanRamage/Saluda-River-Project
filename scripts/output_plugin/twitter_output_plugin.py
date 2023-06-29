@@ -86,13 +86,15 @@ class twitter_output_plugin(output_plugin):
       driver = webdriver.Firefox(options=options, firefox_binary=firefox_binary, executable_path=geckodriver_binary)
       driver.get(url_to_screenshot)
       #To make sure everything has rendered, we wait to see that the element ID on the page, "latest_sample", is there.
-      WebDriverWait(driver, 30).until(lambda x: x.find_element_by_id("latest_sample"))
+      #WebDriverWait(driver, 30).until(lambda x: x.find_element_by_id("latest_sample"))
+      WebDriverWait(driver, 100).until(lambda x: x.find_element_by_id("load_finished"))
+
       screenshot_filename = os.path.join(output_directory, "%s.png" % (now_time.strftime("%Y_%m_%d_%H_%M")))
       self.logger.debug("Destination file: %s" % (screenshot_filename))
       driver.save_screenshot(screenshot_filename)
 
       logo_image = Image.open(logo_file, "r")
-      small_logo = logo_image.resize((256,256))
+      small_logo = logo_image.resize((128,128))
       screenshot_image = Image.open(screenshot_filename, "r")
       screenshot_image.paste(small_logo, (10,45), mask=small_logo)
       self.logger.debug("Branded file: %s" % (screenshot_filename))
