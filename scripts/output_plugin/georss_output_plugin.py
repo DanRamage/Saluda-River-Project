@@ -11,7 +11,7 @@ import uuid
 from wq_sites import wq_sample_sites
 from mako.template import Template
 from mako import exceptions as makoExceptions
-#from pytz import timezone
+from pytz import timezone
 
 class georss:
     def __init__(self, **kwargs):
@@ -55,7 +55,7 @@ class georss_output_plugin(output_plugin):
             #EST = timezone('US/Eastern')
             #utc_sample_date = UTC.localize(EST.localize(kwargs['sampling_date']))
             failed_sites = kwargs['failed_sites']
-            sample_date = kwargs['sampling_date'].strftime("%a, %d %b %Y 00:00:00 EST")
+            sample_date = kwargs['sampling_date'].strftime("%a, %d %b %Y 00:00:00 %z")
             sampling_data = kwargs['sampling_data']
             config_file = ConfigParser.RawConfigParser()
             config_file.read(self.ini_file)
@@ -87,7 +87,7 @@ class georss_output_plugin(output_plugin):
                 '''
                 try:
                     sample_data = sampling_data[wq_site.name][0].date_time
-                    station_sample_date = sample_data.strftime("%a, %d %b %Y %H:%M:%S EST")
+                    station_sample_date = sample_data.strftime("%a, %d %b %Y %H:%M:%S %z")
                 except KeyError:
                     station_sample_date = sample_date
                 station_uuid = uuid.uuid4()

@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0"
      xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
-     xmlns:dc="http://purl.org/dc/elements/1.1/">
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
+
+        <atom:link href="https://howsmyscriver.org/static/rss/midlandsrivers.xml" rel="self" type="application/rss+xml" />
         <title>${title}</title>
         <link>${site_url}</link>
         <description>${subtitle}</description>
         <dc:publisher>${author}</dc:publisher>
         <pubDate>${update_datetime}</pubDate>
+
         % for georss_rec in georss_recs:
             <item>
                 <title>${georss_rec.title}</title>
