@@ -12,15 +12,14 @@ else:
   import configparser as ConfigParser
 import traceback
 import time
-#from yapsy.IPlugin import IPlugin
-#from multiprocessing import Process
-#import multiprocessing
-#multiprocessing.set_start_method('fork')
 from get_wq_sample_data import check_email_for_update,parse_sheet_data
 from wq_sites import wq_sample_sites
 from wq_output_results import wq_sample_data,wq_samples_collection,wq_advisories_file,wq_station_advisories_file
 from data_result_types import data_result_types
 from smtp_utils import smtpClass
+from xeniaSQLiteAlchemy import xeniaAlchemy as sl_xeniaAlchemy
+from save_samples import save_to_database
+from xenia_obs_map import obs_map, json_obs_map
 
 class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
 
@@ -28,6 +27,7 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
     #data_collector_plugin.__init__(self)
     super().__init__()
     self.output_queue = None
+    self.email_only_on_file_download = False
 
   def initialize_plugin(self, **kwargs):
     try:
@@ -37,7 +37,9 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
       self.log_conf_file = plugin_details.get('Settings', 'log_file')
       self.test_data_file = plugin_details.get("Settings", "test_data_file")
       self.output_queue = kwargs['queue']
-
+      #If this flag is set, we only send out an email if we downloaded the sample XLS file.
+      #Otherwise we email every time we check for a file to download.
+      self.email_only_on_file_download = plugin_details.get("MonitorEmail", "email_only_on_file_download")
       email_ini_file = plugin_details.get("MonitorEmail", "ini_file")
       config_file = ConfigParser.RawConfigParser()
       config_file.read(email_ini_file)
@@ -71,6 +73,8 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
 
         results_file = config_file.get('json_settings', 'advisory_results')
         station_results_directory = config_file.get('json_settings', 'station_results_directory')
+
+        sqlite_file = config_file.get('database', 'sqlite_file')
 
       except ConfigParser.Error as e:
         logger.exception(e)
@@ -114,10 +118,12 @@ class wq_sample_data_collector_plugin(my_plugin.data_collector_plugin):
           for site in wq_sites:
             site_advisories = wq_station_advisories_file(site)
             site_advisories.create_file(station_results_directory, wq_data_collection)
-
+          #(sample_sites, wq_sample_recs, obs_map, db_obj)
+          save_to_database(wq_sites, wq_data_collection,sqlite_file=sqlite_file)
           self.output_queue.put((data_result_types.SAMPLING_DATA_TYPE, wq_data_collection))
 
           try:
+            send_email = True
             logger.debug("Emailing sample data collector file list.")
             if len(renamed_files):
               mail_body = "Files: %s downloaded and processed" % (renamed_files)
