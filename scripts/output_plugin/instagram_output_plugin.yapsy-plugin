@@ -16,7 +16,7 @@ instagram_bot_base_path=/tmp/instagram
 tags=#congareeriver #saludariver #congareeriverkeeper #columbiasc #saludashoals #saludashoalspark #saludariverwalk
 
 [screenshot_settings]
-url_to_screenshot=http://howsmyscriver.org/midlands
+url_to_screenshot=http://howsmyscriver.org/midlands/map
 output_directory=/tmp
 logo_file=/home/xeniaprod/scripts/Saluda-River-Project/scripts/images/midlands_logo_round.png
 firefox_binary=/usr/bin/firefox
