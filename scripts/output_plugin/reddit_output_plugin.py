@@ -61,6 +61,7 @@ class reddit_output_plugin(output_plugin):
                 output_text_list.append("[My SC Rivers Website](https://howsmyscriver.org)")
                 output_text_list.append("[My SC Rivers Twitter](https://twitter.com/myscriver)")
                 output_text_list.append("[My SC Rivers Instagram](https://www.instagram.com/midlandsrivercoalition/)")
+                output_text_list.append("[My SC Rivers BlueSky](https://bsky.app/profile/midlandsriver.bsky.social)")
                 output_text_list.append("Auto posted by MySCRiversBot")
                 output_text = '\n\n'.join(output_text_list)
                 for sub in self.subreddits:
