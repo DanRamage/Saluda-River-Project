@@ -21,7 +21,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from atproto import Client
 
-class instagram_output_plugin(output_plugin):
+class bluesky_output_plugin(output_plugin):
   def __init__(self):
     output_plugin.__init__(self)
     self.logger = logging.getLogger(__name__)
