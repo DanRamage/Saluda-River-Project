@@ -82,11 +82,18 @@ class bluesky_output_plugin(output_plugin):
       #We use the options to tell the webdriver to run Firefox headless(don't start a UI)
       now_time = datetime.now()
       options = Options()
+      options.headless = True
+      now_time = datetime.now()
+
+      driver = webdriver.Firefox(options=options, firefox_binary=firefox_binary, executable_path=geckodriver_binary)
+
+      '''
+      options = Options()
       options.add_argument("--headless")
       firefox_service = Service(geckodriver_binary)
       firefox_exe = FirefoxBinary(firefox_binary)
       driver = webdriver.Firefox(options=options, service=firefox_service)
-
+      '''
       driver.get(url_to_screenshot)
       #To make sure everything has rendered, we wait to see that the element ID on the page, "latest_sample", is there.
       WebDriverWait(driver, 100).until(lambda x: x.find_element(By.ID, "load_finished"))
