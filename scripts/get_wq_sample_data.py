@@ -15,7 +15,7 @@ import poplib
 import email
 from xlrd import xldate
 import xlrd
-
+import dateparser
 from wq_sites import wq_sample_sites
 from wq_output_results import wq_sample_data,wq_samples_collection,wq_advisories_file,wq_station_advisories_file
 
@@ -132,6 +132,14 @@ def parse_sheet_data(xl_file_name, wq_data_collection):
             date_val = datetime.strptime(data_row[date_ndx].value, "%Y-%m-%d")
 
           try:
+            time_val = dateparser.parse(data_row[time_ndx].value)
+          except Exception as e:
+            try:
+              time_val = xlrd.xldate.xldate_as_datetime(data_row[time_ndx].value, wb.datemode)
+            except Exception as e:
+              logger.exception(e)
+          '''
+          try:
             time_val = datetime.strptime(data_row[time_ndx].value, "%H%M")
           except Exception as e:
             val = data_row[date_ndx].value
@@ -142,7 +150,7 @@ def parse_sheet_data(xl_file_name, wq_data_collection):
                 time_val = datetime.strptime(str(data_row[time_ndx].value), "%H:%M:%S")
               except Exception as e:
                 logger.exception(e)
-
+          '''
           wq_sample_rec.date_time = (est_tz.localize(datetime.combine(date_val.date(), time_val.time()))).astimezone(utc_tz)
           try:
             wq_sample_rec.value = float(data_row[results_ndx].value)
@@ -177,6 +185,8 @@ def main():
   parser = optparse.OptionParser()
   parser.add_option("-c", "--ConfigFile", dest="config_file", default=None,
                     help="INI Configuration file." )
+  parser.add_option("--SamplesDataFile", dest="data_file", default=None,
+                    help="WQ Data File file." )
 
   (options, args) = parser.parse_args()
 
@@ -209,9 +219,12 @@ def main():
       wq_sites = wq_sample_sites()
       wq_sites.load_sites(file_name=sites_location_file, boundary_file=boundaries_location_file)
 
-      wq_data_files = check_email_for_update(options.config_file)
-      if logger is not None:
-        logger.debug("Files: %s found" % (wq_data_files))
+      if options.data_file is not None:
+        wq_data_files = options.data_file.split(",")
+      else:
+        wq_data_files = check_email_for_update(options.config_file)
+        if logger is not None:
+          logger.debug("Files: %s found" % (wq_data_files))
 
       wq_data_collection = wq_samples_collection()
       for wq_file in wq_data_files:
