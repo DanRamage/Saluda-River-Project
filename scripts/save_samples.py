@@ -12,6 +12,8 @@ from xeniaSQLiteAlchemy import xeniaAlchemy as sl_xeniaAlchemy
 from xeniaSQLiteAlchemy import multi_obs, platform
 from wq_sites import wq_sample_sites
 from wq_output_results import wq_sample_data,wq_samples_collection
+from sqlalchemy.orm.exc import *
+from sqlalchemy import exc
 
 logger = logging.getLogger()
 
@@ -77,7 +79,31 @@ def save_to_database(sample_sites, wq_sample_recs, **kwargs):
                                      m_lat=latitude,
                                      m_value=sample_rec.value
                                      )
-                    db_obj.addRec(db_rec, True)
+                    try:
+                        db_obj.session.add(db_rec)
+                        db_obj.session.commit()
+                    # Trying to add record that already exists.
+                    except exc.IntegrityError as e:
+                        db_obj.session.rollback()
+                        logger.error("Record already exists, updating.")
+                        try:
+                            db_obj.session.query(multi_obs).filter(
+                                multi_obs.m_date == db_rec.m_date,
+                                multi_obs.m_type_id == db_rec.m_type_id,
+                                multi_obs.sensor_id == db_rec.sensor_id,
+                            ).update({
+                                multi_obs.m_value: db_rec.m_value,
+                                multi_obs.m_lon: db_rec.m_lon,
+                                multi_obs.m_lat: db_rec.m_lat,
+                                multi_obs.row_update_date: datetime.now(),
+                            }, synchronize_session=False)
+                            db_obj.session.commit()
+                        except Exception as e:
+                            logger.exception(e)
+                    except Exception as e:
+                        logger.exception(e)
+
+                    #db_obj.addRec(db_rec, True)
                 except Exception as e:
                     logger.exception(e)
     return
