@@ -5,7 +5,7 @@ import os
 import optparse
 import logging.config
 import configparser
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from xenia_obs_map import obs_map, json_obs_map
 from xeniaSQLiteAlchemy import xeniaAlchemy as sl_xeniaAlchemy
@@ -27,6 +27,14 @@ source_to_xenia = [
     }
 ]
 
+def normalize_m_date(value):
+    if isinstance(value, str):
+        value = datetime.fromisoformat(value)
+
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+
+    return value.astimezone(timezone.utc).replace(microsecond=0).isoformat(sep=" ")
 
 def save_to_database(sample_sites, wq_sample_recs, **kwargs):
     row_entry_date = datetime.now()
@@ -70,11 +78,12 @@ def save_to_database(sample_sites, wq_sample_recs, **kwargs):
                     obs_nfo = obs_mapping.get_rec_from_source_name('enterococci')
 
                     logger.debug(f"Adding Platform: {platform_handle} Date: {sample_rec.date_time} Value: {sample_rec.value}")
+                    m_date = normalize_m_date(sample_rec.date_time)
                     db_rec=multi_obs(row_entry_date=row_entry_date,
                                      platform_handle=platform_handle,
                                      sensor_id=(obs_nfo.sensor_id),
                                      m_type_id=(obs_nfo.m_type_id),
-                                     m_date=sample_rec.date_time,
+                                     m_date=m_date,
                                      m_lon=longitude,
                                      m_lat=latitude,
                                      m_value=sample_rec.value
@@ -85,18 +94,21 @@ def save_to_database(sample_sites, wq_sample_recs, **kwargs):
                     # Trying to add record that already exists.
                     except exc.IntegrityError as e:
                         db_obj.session.rollback()
-                        logger.error("Record already exists, updating.")
+                        logger.error(f"Record already exists, updating."
+                                     f" Platform: {platform_handle} ({obs_nfo.m_type_id})({obs_nfo.sensor_id}) Date: {sample_rec.date_time} Value: {sample_rec.value}")
                         try:
-                            db_obj.session.query(multi_obs).filter(
-                                multi_obs.m_date == db_rec.m_date,
-                                multi_obs.m_type_id == db_rec.m_type_id,
-                                multi_obs.sensor_id == db_rec.sensor_id,
+                            updated = db_obj.session.query(multi_obs).filter(
+                                multi_obs.platform_handle == platform_handle,
+                                multi_obs.m_date == m_date,
+                                multi_obs.m_type_id == obs_nfo.m_type_id,
+                                multi_obs.sensor_id == obs_nfo.sensor_id
                             ).update({
                                 multi_obs.m_value: db_rec.m_value,
                                 multi_obs.m_lon: db_rec.m_lon,
                                 multi_obs.m_lat: db_rec.m_lat,
                                 multi_obs.row_update_date: datetime.now(),
                             }, synchronize_session=False)
+                            logger.info(f"Updated {updated} rows")
                             db_obj.session.commit()
                         except Exception as e:
                             logger.exception(e)
