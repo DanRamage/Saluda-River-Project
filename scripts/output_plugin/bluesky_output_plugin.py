@@ -96,7 +96,9 @@ class bluesky_output_plugin(output_plugin):
       '''
       driver.get(url_to_screenshot)
       #To make sure everything has rendered, we wait to see that the element ID on the page, "latest_sample", is there.
-      WebDriverWait(driver, 100).until(lambda x: x.find_element(By.ID, "load_finished"))
+      #WebDriverWait(driver, 100).until(lambda x: x.find_element(By.ID, "load_finished"))
+      #Just sleep for 30 seconds to make sure everything is loaded.
+      time.sleep(30)
       screenshot_filename = os.path.join(output_directory, "%s.png" % (now_time.strftime("%Y_%m_%d_%H_%M")))
       insta_screenshot_filename = os.path.join(output_directory, "%s_instagram_sized.png" % (now_time.strftime("%Y_%m_%d_%H_%M")))
       self.logger.debug("Destination file: %s" % (screenshot_filename))
