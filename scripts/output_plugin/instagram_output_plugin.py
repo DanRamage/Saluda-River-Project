@@ -7,6 +7,7 @@ if sys.version_info[0] < 3:
 else:
   import configparser as ConfigParser
 
+from pathlib import Path
 import shutil
 import time
 from datetime import datetime
@@ -16,7 +17,8 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 
-from instabot import Bot
+#from instabot import Bot
+from instagrapi import Client
 
 class instagram_output_plugin(output_plugin):
   def __init__(self):
@@ -49,9 +51,13 @@ class instagram_output_plugin(output_plugin):
       #We have to clear and then recreate the instagram working directory
       if os.path.exists(self._instabot_directory):
         shutil.rmtree(self._instabot_directory)
+      insta_bot = Client()
+
+      insta_bot.login(self._username, self._password)
+
       #insta_bot = None
-      insta_bot = Bot(base_path=self._instabot_directory)
-      insta_bot.login(username=self._username, password=self._password)
+      #insta_bot = Bot(base_path=self._instabot_directory)
+      #insta_bot.login(username=self._username, password=self._password)
       insta_message = []
       if len(failed_sites):
 
@@ -62,7 +68,7 @@ class instagram_output_plugin(output_plugin):
         insta_message.append("No sites show elevated bacteria levels.")
         self.logger.debug("Sample Date: %s No sites show elevated bacteria levels." % (sample_date))
 
-      insta_message.append(self._tags)
+      #insta_message.append(self._tags)
       self.create_screenshot(insta_bot, sample_date, insta_message)
     except Exception as e:
       self.logger.exception(e)
@@ -84,10 +90,12 @@ class instagram_output_plugin(output_plugin):
       options.headless = True
       now_time = datetime.now()
 
-      driver = webdriver.Firefox(options=options, firefox_binary=firefox_binary, executable_path=geckodriver_binary)
+      #driver = webdriver.Firefox(options=options, firefox_binary=firefox_binary, executable_path=geckodriver_binary)
+      driver = webdriver.Firefox(options=options)
       driver.get(url_to_screenshot)
       #To make sure everything has rendered, we wait to see that the element ID on the page, "latest_sample", is there.
-      WebDriverWait(driver, 30).until(lambda x: x.find_element_by_id("latest_sample"))
+      time.sleep(30)
+      #WebDriverWait(driver, 30).until(lambda x: x.find_element_by_id("latest_sample"))
       screenshot_filename = os.path.join(output_directory, "%s.png" % (now_time.strftime("%Y_%m_%d_%H_%M")))
       insta_screenshot_filename = os.path.join(output_directory, "%s_instagram_sized.png" % (now_time.strftime("%Y_%m_%d_%H_%M")))
       self.logger.debug("Destination file: %s" % (screenshot_filename))
@@ -113,8 +121,13 @@ class instagram_output_plugin(output_plugin):
       sites_message = "\n".join(insta_message)
       caption = ("%s\nSample Date: %s\n%s" % (url_to_screenshot,sample_date, sites_message))
       if insta_bot:
-        if not insta_bot.upload_photo(insta_combined_img_filename, caption):
-          self.logger.error("Error posting screenshot.")
+        media = insta_bot.photo_upload(
+          Path(insta_combined_img_filename),
+          caption=caption
+        )
+
+        #if not insta_bot.upload_photo(insta_combined_img_filename, caption):
+        #  self.logger.error("Error posting screenshot.")
 
       self.logger.debug("Screenshot finished in %f seconds" % (time.time()-start_time))
     except Exception as e:
